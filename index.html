@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Thermodynamic Cycle Analyzer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #334155;
+            --accent-primary: #3b82f6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border: #475569;
+            --glass: rgba(255,255,255,0.05);
+            --shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            --shadow-hover: 0 35px 60px -12px rgba(0,0,0,0.35);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #e2e8f0;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border: #e2e8f0;
+            --glass: rgba(0,0,0,0.03);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+            gap: 0;
+        }
+
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .logo {
+            text-align: center;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .nav-item {
+            padding: 1rem;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: var(--glass);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .nav-item.active {
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .theme-toggle {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-4px);
+        }
+
+        .system-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group input, .form-group select {
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--glass);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, var(--accent-primary), #60a5fa);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .calculate-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .calculate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .results-card {
+            background: linear-gradient(135deg, var(--accent-success), #34d399);
+            border: none;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .result-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            text-align: center;
+        }
+
+        .result-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+            margin: 0.5rem 0;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .efficiency-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            margin: 1rem 0;
+        }
+
+        .efficiency-high { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .efficiency-medium { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .efficiency-low { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        .export-btn {
+            background: var(--accent-success);
+            color: white;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--accent-danger);
+            color: var(--accent-danger);
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                grid-column: 1 / -1;
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 1rem;
+            }
+            .nav-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="logo">
+                <h1><i class="fas fa-fire"></i> ThermoPro</h1>
+            </div>
+            <div class="nav-grid" id="navGrid">
+                <!-- Navigation items populated by JS -->
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <div>
+                    <h2 id="pageTitle" class="system-title">
+                        <i class="fas fa-cog"></i> Select Analysis Type
+                    </h2>
+                </div>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+
+            <div class="card">
+                <div id="dynamicInputs">
+                    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <i class="fas fa-arrow-right" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p>Select a thermodynamic system from the sidebar to begin analysis</p>
+                    </div>
+                </div>
+
+                <button class="calculate-btn" id="calculateBtn" disabled>
+                    <i class="fas fa-calculator"></i>
+                    Calculate Results
+                </button>
+
+                <div id="errorMessage" class="error-message"></div>
+
+                <div id="resultsSection" class="results-section">
+                    <div class="results-card card" id="resultsCard">
+                        <h3><i class="fas fa-chart-line"></i> Analysis Results</h3>
+                        <div class="results-grid" id="resultsContent"></div>
+                        <button id="exportBtn" class="export-btn" style="display: none;">
+                            <i class="fas fa-download"></i> Export Results
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme management
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+            document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        }
+
+        // Initialize theme
+        if (localStorage.getItem('theme') === 'light' || 
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+
+        // [ALL ORIGINAL JAVASCRIPT FROM YOUR CODE GOES HERE - CALCULATIONS UNCHANGED]
+        // Paste the entire original <script> content below, replacing only the DOMContentLoaded section:
+
+        let currentSystem = '';
+        let resultsData = {};
+        let currentUnitSystem = 'SI';
+
+        const conversions = {
+            temperature: {
+                CtoK: (c) => c + 273.15,
+                KtoC: (k) => k - 273.15,
+                CtoF: (c) => c * 9/5 + 32,
+                FtoC: (f) => (f - 32) * 5/9
+            },
+            pressure: {
+                barToKPa: (b) => b * 100,
+                kPaTobBar: (k) => k / 100,
+                barToPsi: (b) => b * 14.5038,
+                psiToBar: (p) => p / 14.5038
+            },
+            power: {
+                kWToHP: (kw) => kw * 1.34102,
+                HPToKW: (hp) => hp / 1.34102
+            },
+            energy: {
+                kJToBTU: (kj) => kj * 0.947817,
+                BTUToKJ: (btu) => btu / 0.947817
+            }
+        };
+
+        const inputConfigs = {
+            otto: [
+                { id: 'r', label: 'Compression Ratio (r)', type: 'number', unit: '', required: true },
+                { id: 'gamma', label: 'Specific Heat Ratio (γ)', type: 'number', value: 1.4, required: true }
+            ],
+            rankine: [
+                { id: 'T3', label: 'Boiler Temperature (T3)', type: 'number', unit: 'K', required: true },
+                { id: 'T4', label: 'Turbine Exit (T4)', type: 'number', unit: 'K', required: true },
+                { id: 'T1', label: 'Condenser Temperature (T1)', type: 'number', unit: 'K', required: true },
+                { id: 'pumpWork', label: 'Pump Work (Wp)', type: 'number', unit: 'kJ/kg', required: true },
+                { id: 'turbineWork', label: 'Turbine Work (Wt)', type: 'number', unit: 'kJ/kg', required: true }
+            ],
+            heatExchanger: [
+                { id: 'dt1', label: 'ΔT1 (Hot In - Cold Out)', type: 'number', unit: 'K', required: true },
+                { id: 'dt2', label: 'ΔT2 (Hot Out - Cold In)', type: 'number', unit: 'K', required: true },
+                { id: 'U', label: 'Overall HTC (U)', type: 'number', unit: 'W/m²K', required: true },
+                { id: 'A', label: 'Heat Transfer Area (A)', type: 'number', unit: 'm²', required: true }
+            ],
+            refrigeration: [
+                { id: 'QL', label: 'Refrigeration Effect (QL)', type: 'number', unit: 'kW', required: true },
+                { id: 'W', label: 'Compressor Work (W)', type: 'number', unit: 'kW', required: true }
+            ],
+            compositeWall: [
+                { id: 'dtTotal', label: 'Total Temperature Difference', type: 'number', unit: 'K', required: true },
+                { id: 'L1', label: 'Layer 1 Thickness (L1)', type: 'number', unit: 'm', required: true },
+                { id: 'k1', label: 'Layer 1 Conductivity (k1)', type: 'number', unit: 'W/mK', required: true },
+                { id: 'A', label: 'Cross-sectional Area', type: 'number', unit: 'm²', required: true },
+                { id: 'L2', label: 'Layer 2 Thickness (L2)', type: 'number', unit: 'm', required: true },
+                { id: 'k2', label: 'Layer 2 Conductivity (k2)', type: 'number', unit: 'W/mK', required: true }
+            ]
+        };
+
+        const navItems = [
+            { id: 'otto', icon: 'fas fa-circle-notch', title: 'Otto Cycle', color: '#3b82f6' },
+            { id: 'rankine', icon: 'fas fa-tint', title: 'Rankine Cycle', color: '#10b981' },
+            { id: 'heatExchanger', icon: 'fas fa-exchange-alt', title: 'Heat Exchanger', color: '#f59e0b' },
+            { id: 'refrigeration', icon: 'fas fa-snowflake', title: 'Refrigeration', color: '#8b5cf6' },
+            { id: 'compositeWall', icon: 'fas fa-layer-group', title: 'Composite Wall', color: '#ef4444' }
+        ];
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initNavigation();
+            updateThemeToggleIcon();
+        });
+
+        function initNavigation() {
+            const navGrid = document.getElementById('navGrid');
+            navGrid.innerHTML = navItems.map(item => `
+                <div class="nav-item" data-system="${item.id}" onclick="selectSystem('${item.id}')">
+                    <i class="${item.icon}" style="font-size: 1.25rem;"></i>
+                    <span>${item.title}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectSystem(systemId) {
+            currentSystem = systemId;
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            updateInputs();
+            document.getElementById('calculateBtn').disabled = false;
+            document.getElementById('pageTitle').innerHTML = `<i class="${navItems.find(item => item.id === systemId).icon}"></i> ${navItems.find(item => item.id === systemId).title}`;
+            hideError();
+            hideResults();
+        }
+
+        // [Include ALL original functions: updateInputs, toggleUnitSystem, toggleUnit, validateInputs, 
+        // showError, hideError, hideResults, calculate, exportResults - COMPLETELY UNCHANGED]
+        
+        function updateInputs() {
+            const dynamicInputs = document.getElementById('dynamicInputs');
+            dynamicInputs.innerHTML = '';
+
+            if (!currentSystem || !inputConfigs[currentSystem]) {
+                dynamicInputs.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <i class="fas fa-cog fa-spin" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p>Preparing ${navItems.find(item => item.id === currentSystem)?.title || 'analysis'}...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const inputsHtml = inputConfigs[currentSystem].map(field => `
+                <div class="form-group">
+                    <label for="${field.id}">${field.label}${field.unit ? ` (${field.unit})` : ''}</label>
+                    <input type="${field.type}" id="${field.id}" value="${field.value || ''}" ${field.required ? 'required' : ''} placeholder="Enter ${field.label.toLowerCase()}">
+                </div>
+            `).join('');
+
+            dynamicInputs.innerHTML = `
+                <div class="input-grid">
+                    ${inputsHtml}
+                </div>
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; color: var(--text-secondary);">
+                        <input type="checkbox" id="imperialToggle" onchange="toggleUnitSystem()"> 
+                        <span>Use Imperial Units</span>
+                    </label>
+                </div>
+            `;
+        }
+
+        // [Continue with ALL original functions unchanged...]
+        function toggleUnitSystem() {
+            currentUnitSystem = document.getElementById('imperialToggle').checked ? 'Imperial' : 'SI';
+        }
+
+        function toggleUnit(fieldId, unit) {
+            const field = document.getElementById(fieldId);
+            const currentValue = parseFloat(field.value);
+            if (isNaN(currentValue)) return;
+
+            const unitBtns = field.parentElement.querySelectorAll('.unit-btn');
+            unitBtns.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function validateInputs() {
+            const inputs = document.querySelectorAll('#dynamicInputs input[required]');
+            let isValid = true;
+            let errorMsg = '';
+
+            inputs.forEach(input => {
+                const value = parseFloat(input.value);
+                if (isNaN(value) || value === '') {
+                    errorMsg = `Please fill all required fields.`;
+                    isValid = false;
+                } else if (value < 0) {
+                    errorMsg = `Negative values not allowed in ${input.previousElementSibling.textContent.trim()}.`;
+                    isValid = false;
+                } else if (input.id === 'r' && value <= 1) {
+                    errorMsg = 'Compression ratio must be greater than 1.';
+                    isValid = false;
+                }
+            });
+
+            const tempFields = ['T1', 'T2', 'T3', 'T4', 'dt1', 'dt2', 'dtTotal'];
+            tempFields.forEach(id => {
+                const field = document.getElementById(id);
+                if (field) {
+                    const val = parseFloat(field.value);
+                    if (val > -273.15) return;
+                    errorMsg = `Temperature ${val}K is below absolute zero.`;
+                    isValid = false;
+                }
+            });
+
+            if (!isValid) {
+                showError(errorMsg);
+            }
+            return isValid;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function hideResults() {
+            document.getElementById('resultsSection').style.display = 'none';
+        }
+
+        function calculate() {
+            if (!validateInputs()) return;
+
+            let efficiency = 0;
+            let resultsHtml = '';
+
+            switch (currentSystem) {
+                case 'otto':
+                    const r = parseFloat(document.getElementById('r').value);
+                    const gamma = parseFloat(document.getElementById('gamma').value);
+                    efficiency = 1 - (1 / Math.pow(r, gamma - 1));
+                    resultsHtml = `
+                        <div class="result-card">
+                            <div class="result-value">${(efficiency*100).toFixed(1)}%</div>
+                            <div class="result-label">Thermal Efficiency</div>
+                        </div>
+                    `;
+                    break;
+                // [ALL OTHER CASES IDENTICAL TO ORIGINAL]
+                case 'rankine':
+                    const Wt = parseFloat(document.getElementById('turbineWork').value);
+                    const Wp = parseFloat(document.getElementById('pumpWork').value);
+                    const T3 = parseFloat(document.getElementById('T3').value);
+                    const T4 = parseFloat(document.getElementById('T4').value);
+                    const Qin = Wt - Wp + (T3 - T4) * 1.005;
+                    efficiency = (Wt - Wp) / Qin;
+                    resultsHtml = `
+                        <div class="result-card">
+                            <div class="result-value">${(Wt - Wp).toFixed(2)}</div>
+                            <div class="result-label">Net Work kJ/kg</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-value">${Qin.toFixed(2)}</div>
+                            <div class="result-label">Heat Input kJ/kg</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-value">${(efficiency*100).toFixed(1)}%</div>
+                            <div class="result-label">Efficiency</div>
+                        </div>
+                    `;
+                    break;
+                case 'heatExchanger':
+                    const dt1 = parseFloat(document.getElementById('dt1').value);
+                    const dt2 = parseFloat(document.getElementById('dt2').value);
+                    const U = parseFloat(document.getElementById('U').value);
+                    const A = parseFloat(document.getElementById('A').value);
+                    
+                    if (dt1 === dt2 || dt1 <= 0 || dt2 <= 0) {
+                        showError('ΔT1 and ΔT2 must be positive and different for LMTD.');
+                        return;
+                    }
+                    
+                    const LMTD = (dt1 - dt2) / Math.log(dt1 / dt2);
+                    const Q = U * A * LMTD;
+                    resultsHtml = `
+                        <div class="result-card">
+                            <div class="result-value">${LMTD.toFixed(2)}K</div>
+                            <div class="result-label">LMTD</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-value">${Q.toFixed(0)}W</div>
+                            <div class="result-label">Heat Transfer</div>
+                        </div>
+                    `;
+                    break;
+                case 'refrigeration':
+                    const QL = parseFloat(document.getElementById('QL').value);
+                    const Wnet = parseFloat(document.getElementById('W').value);
+                    const COP = QL / Wnet;
+                    resultsHtml = `
+                        <div class="result-card">
+                            <div class="result-value">${COP.toFixed(2)}</div>
+                            <div class="result-label">COP</div>
+                        </div>
+                    `;
+                    efficiency = COP;
+                    break;
+                case 'compositeWall':
+                    const L1 = parseFloat(document.getElementById('L1').value);
+                    const k1 = parseFloat(document.getElementById('k1').value);
+                    const L2 = parseFloat(document.getElementById('L2').value);
+                    const k2 = parseFloat(document.getElementById('k2').value);
+                    const Area = parseFloat(document.getElementById('A').value);
+                    const dT = parseFloat(document.getElementById('dtTotal').value);
+                    
+                    const R1 = L1 / (k1 * Area);
+                    const R2 = L2 / (k2 * Area);
+                    const Rtotal = R1 + R2;
+                    const q = dT / Rtotal;
+                    
+                    resultsHtml = `
+                        <div class="result-card">
+                            <div class="result-value">${Rtotal.toFixed(4)}</div>
+                            <div class="result-label">Total Resistance</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-value">${q.toFixed(0)}W</div>
+                            <div class="result-label">Heat Flux</div>
+                        </div>
+                    `;
+                    break;
+            }
+
+            resultsData = {
+                system: currentSystem,
+                efficiency: efficiency,
+                timestamp: new Date().toLocaleString(),
+                results: resultsHtml
+            };
+
+            document.getElementById('resultsContent').innerHTML = resultsHtml;
+
+            const efficiencyIndicator = document.createElement('div');
+            efficiencyIndicator.className = 'efficiency-badge';
+            let effPercent = efficiency * 100;
+            
+            if (currentSystem === 'refrigeration') {
+                efficiencyIndicator.innerHTML = `<i class="fas fa-check-circle"></i>COP: ${effPercent.toFixed(1)} (Excellent)`;
+                efficiencyIndicator.className += ' efficiency-high';
+            } else if (effPercent > 50) {
+                efficiencyIndicator.innerHTML = `<i class="fas fa-trophy"></i>${effPercent.toFixed(1)}% (Excellent)`;
+                efficiencyIndicator.className += ' efficiency-high';
+            } else if (effPercent > 30) {
+                efficiencyIndicator.innerHTML = `<i class="fas fa-star"></i>${effPercent.toFixed(1)}% (Good)`;
+                efficiencyIndicator.className += ' efficiency-medium';
+            } else {
+                efficiencyIndicator.innerHTML = `<i class="fas fa-chart-line"></i>${effPercent.toFixed(1)}%`;
+                efficiencyIndicator.className += ' efficiency-low';
+            }
+            
+            document.getElementById('resultsContent').appendChild(efficiencyIndicator);
+
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('exportBtn').style.display = 'inline-flex';
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        document.getElementById('calculateBtn').addEventListener('click', calculate);
+        document.getElementById('exportBtn').addEventListener('click', exportResults);
+
+        function exportResults() {
+            const content = `Thermodynamic Analysis Results
+========================================
+System: ${navItems.find(item => item.id === currentSystem).title}
+Date: ${resultsData.timestamp}
+${currentSystem === 'refrigeration' ? 'COP' : 'Efficiency'}: ${resultsData.efficiency.toFixed(4)}
+
+Results:
+${document.getElementById('resultsContent').innerText}
+
+Generated by ThermoPro Advanced Analyzer
+${new Date().toLocaleString()}`;
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `thermo_analysis_${currentSystem}_${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function updateThemeToggleIcon() {
+            const toggle = document.querySelector('.theme-toggle i');
+            const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+            toggle.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+    </script>
+</body>
+</html>
